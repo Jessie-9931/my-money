@@ -16,14 +16,18 @@ small{color:#888}
 .item{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eee}
 .income{color:#159768}.expense{color:#dc5555}
 input,select,button{width:100%;padding:13px;margin:7px 0;border:1px solid #ddd;border-radius:10px;font-size:16px;background:white}
-button{background:#222;color:white;border:0;font-weight:bold}
+button{background:#222;color:white;border:0;font-weight:bold;cursor:pointer}
 nav{display:flex;gap:8px}
 nav button{font-size:13px;padding:10px 4px}
 #language{width:auto;min-width:135px;margin:0}
 label{display:block;margin-top:8px}
 .inline-check{display:flex;align-items:center;gap:8px}
 .inline-check input{width:auto;margin:0}
-.danger{color:#dc5555;cursor:pointer;font-size:13px}
+.actions{display:flex;gap:6px;margin-top:7px}
+.actions button{width:auto;padding:7px 12px;font-size:12px;margin:0}
+.edit-btn{background:#e9efff;color:#3156a5}
+.delete-btn{background:#fff0f0;color:#c33}
+#cancelEdit{background:#888;display:none}
 </style>
 </head>
 <body>
@@ -56,11 +60,14 @@ label{display:block;margin-top:8px}
 <section id="record">
 <div class="card">
 <h3 id="newRecordTitle"></h3>
+
 <select id="type">
 <option value="expense" id="typeExpense"></option>
 <option value="income" id="typeIncome"></option>
 </select>
+
 <input id="amount" type="number" placeholder="Amount (RM)" step="0.01" min="0">
+
 <select id="category">
 <option value="食物"></option>
 <option value="交通"></option>
@@ -71,14 +78,19 @@ label{display:block;margin-top:8px}
 <option value="工资"></option>
 <option value="其他"></option>
 </select>
+
 <input id="note" placeholder="Note (optional)">
+
 <label id="dateLabel" for="date"></label>
 <input id="date" type="date">
+
 <label class="inline-check">
 <input id="credit" type="checkbox">
 <span id="creditCheckLabel"></span>
 </label>
+
 <button onclick="add()" id="saveRecord"></button>
+<button onclick="cancelEdit()" id="cancelEdit"></button>
 </div>
 
 <div class="card">
@@ -121,22 +133,24 @@ zh:{
 tagline:'简单记录 · 好好管理每一分钱',
 balance:'本月结余',income:'收入',expense:'支出',
 record:'记账',stats:'统计',budget:'预算',
-newRecord:'新增记录',expenseType:'支出',incomeType:'收入',
+newRecord:'新增记录',editRecord:'编辑记录',
+expenseType:'支出',incomeType:'收入',
 amount:'金额 RM',note:'备注（可不填）',date:'日期',
-creditCheck:'信用卡消费',saveRecord:'保存记录',
-detail:'记录明细',monthlyStats:'本月统计',
-monthlyBudget:'每月预算',setBudget:'设定预算 RM',
-saveBudget:'保存预算',creditTitle:'信用卡消费',
-backup:'数据备份',export:'导出备份',
-chooseFile:'请选择备份文件',import:'导入备份',
-noRecords:'还没有记录',delete:'删除',
+creditCheck:'信用卡消费',
+saveRecord:'保存记录',updateRecord:'更新记录',
+cancel:'取消编辑',detail:'记录明细',
+monthlyStats:'本月统计',monthlyBudget:'每月预算',
+setBudget:'设定预算 RM',saveBudget:'保存预算',
+creditTitle:'信用卡消费',backup:'数据备份',
+export:'导出备份',chooseFile:'请选择备份文件',
+import:'导入备份',noRecords:'还没有记录',
+delete:'删除',edit:'编辑',
 confirmDelete:'确定删除这笔记录？',
 invalidAmount:'请输入正确金额',
 budgetNotSet:'还没设定预算',
 used:'已用',remaining:'剩余',
 overBudget:'已超出预算！',
-monthlyIncome:'本月收入',
-monthlyExpense:'本月支出',
+monthlyIncome:'本月收入',monthlyExpense:'本月支出',
 imported:'导入成功',badFile:'文件格式不正确',
 categories:['食物','交通','购物','账单','娱乐','医疗','工资','其他']
 },
@@ -144,15 +158,18 @@ en:{
 tagline:'Track simply · Manage every ringgit wisely',
 balance:'Monthly balance',income:'Income',expense:'Expenses',
 record:'Records',stats:'Statistics',budget:'Budget',
-newRecord:'Add a record',expenseType:'Expense',incomeType:'Income',
+newRecord:'Add a record',editRecord:'Edit record',
+expenseType:'Expense',incomeType:'Income',
 amount:'Amount (RM)',note:'Note (optional)',date:'Date',
-creditCheck:'Credit card purchase',saveRecord:'Save record',
-detail:'Transaction history',monthlyStats:'Monthly statistics',
-monthlyBudget:'Monthly budget',setBudget:'Set budget (RM)',
-saveBudget:'Save budget',creditTitle:'Credit card spending',
-backup:'Data backup',export:'Export backup',
-chooseFile:'Please choose a backup file',import:'Import backup',
-noRecords:'No records yet',delete:'Delete',
+creditCheck:'Credit card purchase',
+saveRecord:'Save record',updateRecord:'Update record',
+cancel:'Cancel editing',detail:'Transaction history',
+monthlyStats:'Monthly statistics',monthlyBudget:'Monthly budget',
+setBudget:'Set budget (RM)',saveBudget:'Save budget',
+creditTitle:'Credit card spending',backup:'Data backup',
+export:'Export backup',chooseFile:'Please choose a backup file',
+import:'Import backup',noRecords:'No records yet',
+delete:'Delete',edit:'Edit',
 confirmDelete:'Delete this record?',
 invalidAmount:'Please enter a valid amount',
 budgetNotSet:'No budget set yet',
@@ -167,15 +184,18 @@ ms:{
 tagline:'Catat dengan mudah · Urus wang anda dengan bijak',
 balance:'Baki bulan ini',income:'Pendapatan',expense:'Perbelanjaan',
 record:'Rekod',stats:'Statistik',budget:'Bajet',
-newRecord:'Tambah rekod',expenseType:'Perbelanjaan',incomeType:'Pendapatan',
+newRecord:'Tambah rekod',editRecord:'Edit rekod',
+expenseType:'Perbelanjaan',incomeType:'Pendapatan',
 amount:'Jumlah (RM)',note:'Catatan (pilihan)',date:'Tarikh',
-creditCheck:'Pembelian kad kredit',saveRecord:'Simpan rekod',
-detail:'Butiran rekod',monthlyStats:'Statistik bulanan',
-monthlyBudget:'Bajet bulanan',setBudget:'Tetapkan bajet (RM)',
-saveBudget:'Simpan bajet',creditTitle:'Perbelanjaan kad kredit',
-backup:'Sandaran data',export:'Eksport sandaran',
-chooseFile:'Sila pilih fail sandaran',import:'Import sandaran',
-noRecords:'Belum ada rekod',delete:'Padam',
+creditCheck:'Pembelian kad kredit',
+saveRecord:'Simpan rekod',updateRecord:'Kemas kini rekod',
+cancel:'Batal edit',detail:'Butiran rekod',
+monthlyStats:'Statistik bulanan',monthlyBudget:'Bajet bulanan',
+setBudget:'Tetapkan bajet (RM)',saveBudget:'Simpan bajet',
+creditTitle:'Perbelanjaan kad kredit',backup:'Sandaran data',
+export:'Eksport sandaran',chooseFile:'Sila pilih fail sandaran',
+import:'Import sandaran',noRecords:'Belum ada rekod',
+delete:'Padam',edit:'Edit',
 confirmDelete:'Padam rekod ini?',
 invalidAmount:'Sila masukkan jumlah yang sah',
 budgetNotSet:'Bajet belum ditetapkan',
@@ -191,6 +211,7 @@ categories:['Makanan','Pengangkutan','Membeli-belah','Bil','Hiburan','Perubatan'
 let lang=localStorage.getItem('moneyLanguage')||'zh';
 let records=JSON.parse(localStorage.getItem('moneyRecords')||'[]');
 let budget=Number(localStorage.getItem('moneyBudget')||0);
+let editingIndex=null;
 
 const $=id=>document.getElementById(id);
 const money=n=>'RM '+Number(n||0).toFixed(2);
@@ -234,14 +255,16 @@ $('tabRecord').textContent=t('record');
 $('tabStats').textContent=t('stats');
 $('tabBudget').textContent=t('budget');
 
-$('newRecordTitle').textContent=t('newRecord');
+$('newRecordTitle').textContent=editingIndex===null?t('newRecord'):t('editRecord');
 $('typeExpense').textContent=t('expenseType');
 $('typeIncome').textContent=t('incomeType');
 $('amount').placeholder=t('amount');
 $('note').placeholder=t('note');
 $('dateLabel').textContent=t('date');
 $('creditCheckLabel').textContent=t('creditCheck');
-$('saveRecord').textContent=t('saveRecord');
+
+$('saveRecord').textContent=editingIndex===null?t('saveRecord'):t('updateRecord');
+$('cancelEdit').textContent=t('cancel');
 
 $('detailTitle').textContent=t('detail');
 $('monthlyStatsTitle').textContent=t('monthlyStats');
@@ -276,19 +299,56 @@ alert(t('invalidAmount'));
 return;
 }
 
-records.unshift({
+let data={
 type:$('type').value,
 amount,
 category:$('category').value,
 note:$('note').value,
 date:$('date').value,
 credit:$('credit').checked
-});
+};
+
+if(editingIndex!==null){
+records[editingIndex]=data;
+}else{
+records.unshift(data);
+}
 
 persist();
+cancelEdit();
+}
+
+function editRecord(i){
+editingIndex=i;
+let r=records[i];
+
+$('type').value=r.type;
+$('amount').value=r.amount;
+$('category').value=r.category;
+$('note').value=r.note||'';
+$('date').value=r.date||today();
+$('credit').checked=!!r.credit;
+
+$('newRecordTitle').textContent=t('editRecord');
+$('saveRecord').textContent=t('updateRecord');
+$('cancelEdit').style.display='block';
+
+show('record');
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function cancelEdit(){
+editingIndex=null;
 $('amount').value='';
 $('note').value='';
+$('date').value=today();
+$('type').value='expense';
+$('category').selectedIndex=0;
 $('credit').checked=false;
+
+$('newRecordTitle').textContent=t('newRecord');
+$('saveRecord').textContent=t('saveRecord');
+$('cancelEdit').style.display='none';
 }
 
 function render(){
@@ -307,10 +367,14 @@ $('balance').textContent=money(inc-exp);
 $('list').innerHTML=records.map((r,i)=>`
 <div class="item">
 <div>${safe(categoryName(r.category))}${r.credit?' 💳':''}<br>
-<small>${safe(r.date)} ${safe(r.note||'')}</small></div>
+<small>${safe(r.date)} ${safe(r.note||'')}</small>
+<div class="actions">
+<button class="edit-btn" onclick="editRecord(${i})">${t('edit')}</button>
+<button class="delete-btn" onclick="del(${i})">${t('delete')}</button>
+</div>
+</div>
 <div class="${r.type==='income'?'income':'expense'}">
-${r.type==='income'?'+':'-'}${money(r.amount)}<br>
-<small class="danger" onclick="del(${i})">${t('delete')}</small>
+${r.type==='income'?'+':'-'}${money(r.amount)}
 </div>
 </div>
 `).join('')||t('noRecords');
@@ -339,6 +403,8 @@ $('creditInfo').textContent=money(cardTotal);
 function del(i){
 if(confirm(t('confirmDelete'))){
 records.splice(i,1);
+if(editingIndex===i)cancelEdit();
+else if(editingIndex!==null&&editingIndex>i)editingIndex--;
 persist();
 }
 }
@@ -384,6 +450,7 @@ records=d.records;
 budget=Number(d.budget)||0;
 localStorage.setItem('moneyBudget',budget);
 persist();
+cancelEdit();
 alert(t('imported'));
 }catch(e){
 alert(t('badFile'));
