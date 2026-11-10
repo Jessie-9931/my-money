@@ -1,152 +1,404 @@
-
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffffff">
-<title>My Money 记账</title>
-<link rel="manifest" href="manifest.json">
+<title>My Money</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f6f6f6;color:#222;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px}
-h1{font-size:26px}
+body{margin:0;background:#f6f6f6;color:#222;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;max-width:720px;margin-inline:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:26px;margin:8px 0}
+small{color:#888}
 .card{background:white;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #00000008}
 .total{font-size:30px;font-weight:bold}
-small{color:#888}
+.item{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eee}
+.income{color:#159768}.expense{color:#dc5555}
 input,select,button{width:100%;padding:13px;margin:7px 0;border:1px solid #ddd;border-radius:10px;font-size:16px;background:white}
 button{background:#222;color:white;border:0;font-weight:bold}
-.item{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee}
-.income{color:#159768}.expense{color:#dc5555}
 nav{display:flex;gap:8px}
 nav button{font-size:13px;padding:10px 4px}
+#language{width:auto;min-width:135px;margin:0}
+label{display:block;margin-top:8px}
+.inline-check{display:flex;align-items:center;gap:8px}
+.inline-check input{width:auto;margin:0}
+.danger{color:#dc5555;cursor:pointer;font-size:13px}
 </style>
 </head>
 <body>
+
+<header>
+<div>
 <h1>My Money 💰</h1>
-<small>简单记录 · 好好管理每一分钱</small>
+<small id="tagline"></small>
+</div>
+<select id="language">
+<option value="zh">简体中文</option>
+<option value="en">English</option>
+<option value="ms">Bahasa Melayu</option>
+</select>
+</header>
 
 <div class="card">
-<small>本月结余</small>
+<small id="balanceLabel"></small>
 <div class="total" id="balance">RM 0.00</div>
-<div class="item"><span>收入</span><b class="income" id="income">RM 0.00</b></div>
-<div class="item"><span>支出</span><b class="expense" id="expense">RM 0.00</b></div>
+<div class="item"><span id="incomeLabel"></span><b class="income" id="income">RM 0.00</b></div>
+<div class="item"><span id="expenseLabel"></span><b class="expense" id="expense">RM 0.00</b></div>
 </div>
 
 <nav>
-<button onclick="show('record')">记账</button>
-<button onclick="show('stats')">统计</button>
-<button onclick="show('budget')">预算</button>
+<button onclick="show('record')" id="tabRecord"></button>
+<button onclick="show('stats')" id="tabStats"></button>
+<button onclick="show('budget')" id="tabBudget"></button>
 </nav>
 
 <section id="record">
 <div class="card">
-<h3>新增记录</h3>
+<h3 id="newRecordTitle"></h3>
 <select id="type">
-<option value="expense">支出</option>
-<option value="income">收入</option>
+<option value="expense" id="typeExpense"></option>
+<option value="income" id="typeIncome"></option>
 </select>
-<input id="amount" type="number" placeholder="金额 RM" step="0.01">
+<input id="amount" type="number" placeholder="Amount (RM)" step="0.01" min="0">
 <select id="category">
-<option>食物</option><option>交通</option><option>购物</option>
-<option>账单</option><option>娱乐</option><option>医疗</option>
-<option>工资</option><option>其他</option>
+<option value="食物"></option>
+<option value="交通"></option>
+<option value="购物"></option>
+<option value="账单"></option>
+<option value="娱乐"></option>
+<option value="医疗"></option>
+<option value="工资"></option>
+<option value="其他"></option>
 </select>
-<input id="note" placeholder="备注（可不填）">
-<label>日期</label>
+<input id="note" placeholder="Note (optional)">
+<label id="dateLabel" for="date"></label>
 <input id="date" type="date">
-<label><input id="credit" type="checkbox" style="width:auto"> 信用卡消费</label>
-<button onclick="add()">保存记录</button>
+<label class="inline-check">
+<input id="credit" type="checkbox">
+<span id="creditCheckLabel"></span>
+</label>
+<button onclick="add()" id="saveRecord"></button>
 </div>
+
 <div class="card">
-<h3>记录明细</h3>
+<h3 id="detailTitle"></h3>
 <div id="list"></div>
 </div>
 </section>
 
 <section id="stats" style="display:none">
 <div class="card">
-<h3>本月统计</h3>
+<h3 id="monthlyStatsTitle"></h3>
 <div id="statistics"></div>
 </div>
 </section>
 
 <section id="budget" style="display:none">
 <div class="card">
-<h3>每月预算</h3>
-<input id="budgetAmount" type="number" placeholder="设定预算 RM">
-<button onclick="saveBudget()">保存预算</button>
+<h3 id="monthlyBudgetTitle"></h3>
+<input id="budgetAmount" type="number" min="0" step="0.01">
+<button onclick="saveBudget()" id="saveBudgetBtn"></button>
 <div id="budgetInfo"></div>
 </div>
+
 <div class="card">
-<h3>信用卡消费</h3>
+<h3 id="creditTitle"></h3>
 <div id="creditInfo"></div>
 </div>
+
 <div class="card">
-<h3>数据备份</h3>
-<button onclick="exportData()">导出备份</button>
+<h3 id="backupTitle"></h3>
+<button onclick="exportData()" id="exportBtn"></button>
 <input type="file" id="importFile" accept=".json">
-<button onclick="importData()">导入备份</button>
+<button onclick="importData()" id="importBtn"></button>
 </div>
 </section>
 
 <script>
+const translations = {
+zh:{
+tagline:'简单记录 · 好好管理每一分钱',
+balance:'本月结余',income:'收入',expense:'支出',
+record:'记账',stats:'统计',budget:'预算',
+newRecord:'新增记录',expenseType:'支出',incomeType:'收入',
+amount:'金额 RM',note:'备注（可不填）',date:'日期',
+creditCheck:'信用卡消费',saveRecord:'保存记录',
+detail:'记录明细',monthlyStats:'本月统计',
+monthlyBudget:'每月预算',setBudget:'设定预算 RM',
+saveBudget:'保存预算',creditTitle:'信用卡消费',
+backup:'数据备份',export:'导出备份',
+chooseFile:'请选择备份文件',import:'导入备份',
+noRecords:'还没有记录',delete:'删除',
+confirmDelete:'确定删除这笔记录？',
+invalidAmount:'请输入正确金额',
+budgetNotSet:'还没设定预算',
+used:'已用',remaining:'剩余',
+overBudget:'已超出预算！',
+monthlyIncome:'本月收入',
+monthlyExpense:'本月支出',
+imported:'导入成功',badFile:'文件格式不正确',
+categories:['食物','交通','购物','账单','娱乐','医疗','工资','其他']
+},
+en:{
+tagline:'Track simply · Manage every ringgit wisely',
+balance:'Monthly balance',income:'Income',expense:'Expenses',
+record:'Records',stats:'Statistics',budget:'Budget',
+newRecord:'Add a record',expenseType:'Expense',incomeType:'Income',
+amount:'Amount (RM)',note:'Note (optional)',date:'Date',
+creditCheck:'Credit card purchase',saveRecord:'Save record',
+detail:'Transaction history',monthlyStats:'Monthly statistics',
+monthlyBudget:'Monthly budget',setBudget:'Set budget (RM)',
+saveBudget:'Save budget',creditTitle:'Credit card spending',
+backup:'Data backup',export:'Export backup',
+chooseFile:'Please choose a backup file',import:'Import backup',
+noRecords:'No records yet',delete:'Delete',
+confirmDelete:'Delete this record?',
+invalidAmount:'Please enter a valid amount',
+budgetNotSet:'No budget set yet',
+used:'Used',remaining:'Remaining',
+overBudget:'Budget exceeded!',
+monthlyIncome:'Income this month',
+monthlyExpense:'Expenses this month',
+imported:'Import successful',badFile:'Invalid file format',
+categories:['Food','Transport','Shopping','Bills','Entertainment','Medical','Salary','Others']
+},
+ms:{
+tagline:'Catat dengan mudah · Urus wang anda dengan bijak',
+balance:'Baki bulan ini',income:'Pendapatan',expense:'Perbelanjaan',
+record:'Rekod',stats:'Statistik',budget:'Bajet',
+newRecord:'Tambah rekod',expenseType:'Perbelanjaan',incomeType:'Pendapatan',
+amount:'Jumlah (RM)',note:'Catatan (pilihan)',date:'Tarikh',
+creditCheck:'Pembelian kad kredit',saveRecord:'Simpan rekod',
+detail:'Butiran rekod',monthlyStats:'Statistik bulanan',
+monthlyBudget:'Bajet bulanan',setBudget:'Tetapkan bajet (RM)',
+saveBudget:'Simpan bajet',creditTitle:'Perbelanjaan kad kredit',
+backup:'Sandaran data',export:'Eksport sandaran',
+chooseFile:'Sila pilih fail sandaran',import:'Import sandaran',
+noRecords:'Belum ada rekod',delete:'Padam',
+confirmDelete:'Padam rekod ini?',
+invalidAmount:'Sila masukkan jumlah yang sah',
+budgetNotSet:'Bajet belum ditetapkan',
+used:'Digunakan',remaining:'Baki',
+overBudget:'Bajet telah melebihi had!',
+monthlyIncome:'Pendapatan bulan ini',
+monthlyExpense:'Perbelanjaan bulan ini',
+imported:'Import berjaya',badFile:'Format fail tidak sah',
+categories:['Makanan','Pengangkutan','Membeli-belah','Bil','Hiburan','Perubatan','Gaji','Lain-lain']
+}
+};
+
+let lang=localStorage.getItem('moneyLanguage')||'zh';
 let records=JSON.parse(localStorage.getItem('moneyRecords')||'[]');
 let budget=Number(localStorage.getItem('moneyBudget')||0);
-const money=n=>'RM '+Number(n).toFixed(2);
-const thisMonth=()=>new Date().toISOString().slice(0,7);
-document.getElementById('date').value=new Date().toISOString().slice(0,10);
 
-function save(){localStorage.setItem('moneyRecords',JSON.stringify(records));render()}
-function add(){
-let amount=Number(document.getElementById('amount').value);
-if(!amount||amount<=0){alert('请输入正确金额');return}
-records.unshift({
-type:document.getElementById('type').value,
-amount,
-category:document.getElementById('category').value,
-note:document.getElementById('note').value,
-date:document.getElementById('date').value,
-credit:document.getElementById('credit').checked
-});
-save();
-document.getElementById('amount').value='';
-document.getElementById('note').value='';
-document.getElementById('credit').checked=false;
+const $=id=>document.getElementById(id);
+const money=n=>'RM '+Number(n||0).toFixed(2);
+
+function thisMonth(){
+let d=new Date();
+return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
+
+function today(){
+let d=new Date();
+return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+$('date').value=today();
+
+function t(key){return translations[lang][key]}
+
+function safe(value){
+return String(value??'').replace(/[&<>"']/g,c=>({
+'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+}
+
+function categoryName(value){
+let index=['食物','交通','购物','账单','娱乐','医疗','工资','其他'].indexOf(value);
+return index>=0?translations[lang].categories[index]:value;
+}
+
+function setLanguage(next){
+lang=next;
+localStorage.setItem('moneyLanguage',lang);
+document.documentElement.lang=lang==='zh'?'zh-CN':lang;
+
+$('tagline').textContent=t('tagline');
+$('balanceLabel').textContent=t('balance');
+$('incomeLabel').textContent=t('income');
+$('expenseLabel').textContent=t('expense');
+
+$('tabRecord').textContent=t('record');
+$('tabStats').textContent=t('stats');
+$('tabBudget').textContent=t('budget');
+
+$('newRecordTitle').textContent=t('newRecord');
+$('typeExpense').textContent=t('expenseType');
+$('typeIncome').textContent=t('incomeType');
+$('amount').placeholder=t('amount');
+$('note').placeholder=t('note');
+$('dateLabel').textContent=t('date');
+$('creditCheckLabel').textContent=t('creditCheck');
+$('saveRecord').textContent=t('saveRecord');
+
+$('detailTitle').textContent=t('detail');
+$('monthlyStatsTitle').textContent=t('monthlyStats');
+$('monthlyBudgetTitle').textContent=t('monthlyBudget');
+$('budgetAmount').placeholder=t('setBudget');
+$('saveBudgetBtn').textContent=t('saveBudget');
+$('creditTitle').textContent=t('creditTitle');
+
+$('backupTitle').textContent=t('backup');
+$('exportBtn').textContent=t('export');
+$('importBtn').textContent=t('import');
+
+[...$('category').options].forEach((o,i)=>{
+o.textContent=translations[lang].categories[i];
+});
+
+render();
+}
+
+$('language').value=lang;
+$('language').addEventListener('change',e=>setLanguage(e.target.value));
+
+function persist(){
+localStorage.setItem('moneyRecords',JSON.stringify(records));
+render();
+}
+
+function add(){
+let amount=Number($('amount').value);
+if(!amount||amount<=0){
+alert(t('invalidAmount'));
+return;
+}
+
+records.unshift({
+type:$('type').value,
+amount,
+category:$('category').value,
+note:$('note').value,
+date:$('date').value,
+credit:$('credit').checked
+});
+
+persist();
+$('amount').value='';
+$('note').value='';
+$('credit').checked=false;
+}
+
 function render(){
 let month=records.filter(r=>r.date&&r.date.slice(0,7)===thisMonth());
-let inc=month.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-let exp=month.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
-document.getElementById('income').textContent=money(inc);
-document.getElementById('expense').textContent=money(exp);
-document.getElementById('balance').textContent=money(inc-exp);
-document.getElementById('list').innerHTML=records.map((r,i)=>
-`<div class="item"><div>${r.category}${r.credit?' 💳':''}<br><small>${r.date} ${r.note||''}</small></div><div class="${r.type}">${r.type==='income'?'+':'-'}${money(r.amount)}<br><small onclick="del(${i})">删除</small></div></div>`
-).join('')||'还没有记录';
+
+let inc=month.filter(r=>r.type==='income')
+.reduce((s,r)=>s+Number(r.amount),0);
+
+let exp=month.filter(r=>r.type==='expense')
+.reduce((s,r)=>s+Number(r.amount),0);
+
+$('income').textContent=money(inc);
+$('expense').textContent=money(exp);
+$('balance').textContent=money(inc-exp);
+
+$('list').innerHTML=records.map((r,i)=>`
+<div class="item">
+<div>${safe(categoryName(r.category))}${r.credit?' 💳':''}<br>
+<small>${safe(r.date)} ${safe(r.note||'')}</small></div>
+<div class="${r.type==='income'?'income':'expense'}">
+${r.type==='income'?'+':'-'}${money(r.amount)}<br>
+<small class="danger" onclick="del(${i})">${t('delete')}</small>
+</div>
+</div>
+`).join('')||t('noRecords');
+
 let cats={};
-month.filter(r=>r.type==='expense').forEach(r=>cats[r.category]=(cats[r.category]||0)+r.amount);
-document.getElementById('statistics').innerHTML=
-'本月收入：'+money(inc)+'<br>本月支出：'+money(exp)+'<hr>'+
-Object.entries(cats).map(([k,v])=>k+'：'+money(v)).join('<br>');
-document.getElementById('budgetInfo').textContent=
-budget?'预算：'+money(budget)+'｜已用：'+money(exp)+'｜剩余：'+money(budget-exp):'还没设定预算';
-if(budget&&exp>budget)document.getElementById('budgetInfo').textContent+=' ⚠️ 已超出预算！';
-document.getElementById('creditInfo').textContent=money(month.filter(r=>r.credit&&r.type==='expense').reduce((s,r)=>s+r.amount,0));
+month.filter(r=>r.type==='expense').forEach(r=>{
+let name=categoryName(r.category);
+cats[name]=(cats[name]||0)+Number(r.amount);
+});
+
+$('statistics').innerHTML=
+`${t('monthlyIncome')}：${money(inc)}<br>
+${t('monthlyExpense')}：${money(exp)}<hr>`+
+Object.entries(cats).map(([k,v])=>`${safe(k)}：${money(v)}`).join('<br>');
+
+$('budgetInfo').textContent=budget
+?`${t('monthlyBudget')}：${money(budget)}｜${t('used')}：${money(exp)}｜${t('remaining')}：${money(budget-exp)}${exp>budget?' ⚠️ '+t('overBudget'):''}`
+:t('budgetNotSet');
+
+let cardTotal=month.filter(r=>r.credit&&r.type==='expense')
+.reduce((s,r)=>s+Number(r.amount),0);
+
+$('creditInfo').textContent=money(cardTotal);
 }
-function del(i){if(confirm('确定删除这笔记录？')){records.splice(i,1);save()}}
-function show(id){['record','stats','budget'].forEach(x=>document.getElementById(x).style.display=x===id?'block':'none')}
-function saveBudget(){budget=Number(document.getElementById('budgetAmount').value);localStorage.setItem('moneyBudget',budget);render()}
-function exportData(){
-let blob=new Blob([JSON.stringify({records,budget})],{type:'application/json'});
-let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-money-backup.json';a.click();
+
+function del(i){
+if(confirm(t('confirmDelete'))){
+records.splice(i,1);
+persist();
 }
-function importData(){
-let f=document.getElementById('importFile').files[0];if(!f)return alert('请选择备份文件');
-let reader=new FileReader();reader.onload=()=>{try{let d=JSON.parse(reader.result);records=d.records||[];budget=d.budget||0;localStorage.setItem('moneyBudget',budget);save();alert('导入成功')}catch(e){alert('文件格式不正确')}};reader.readAsText(f);
 }
+
+function show(id){
+['record','stats','budget'].forEach(x=>{
+$(x).style.display=x===id?'block':'none';
+});
+}
+
+function saveBudget(){
+let value=Number($('budgetAmount').value);
+if(value<0||!Number.isFinite(value)){
+alert(t('invalidAmount'));
+return;
+}
+budget=value;
+localStorage.setItem('moneyBudget',budget);
 render();
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
+}
+
+function exportData(){
+let blob=new Blob([JSON.stringify({records,budget},null,2)],{type:'application/json'});
+let a=document.createElement('a');
+let url=URL.createObjectURL(blob);
+a.href=url;
+a.download='my-money-backup.json';
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function importData(){
+let f=$('importFile').files[0];
+if(!f){alert(t('chooseFile'));return;}
+
+let reader=new FileReader();
+reader.onload=()=>{
+try{
+let d=JSON.parse(reader.result);
+if(!Array.isArray(d.records))throw new Error('Invalid data');
+
+records=d.records;
+budget=Number(d.budget)||0;
+localStorage.setItem('moneyBudget',budget);
+persist();
+alert(t('imported'));
+}catch(e){
+alert(t('badFile'));
+}
+};
+reader.readAsText(f);
+}
+
+setLanguage(lang);
+
+if('serviceWorker' in navigator){
+window.addEventListener('load',()=>{
+navigator.serviceWorker.register('./sw.js').catch(()=>{});
+});
+}
 </script>
 </body>
 </html>
