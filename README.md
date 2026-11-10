@@ -1,1 +1,1 @@
-# my-money
+# My Money App
